@@ -16,6 +16,7 @@ void app_timer(void);  // prototype
 
 void app_main()
 {   double z=3.14159;
+   
     printf("Hello world! 12/28/20 v4\n");
     printf("Floating point 3.14159=%10.3f\n", z);
     /* Print chip information */
@@ -34,10 +35,27 @@ void app_main()
     printf("About to start timer apps\n");
     app_timer();
 
+    printf("Echoing character input [x to dump core]:");
+    
+    while(1) {
+		uint8_t ch;
+	    ch = fgetc(stdin);
+	    if (ch!=0xFF)
+	    {
+		    fputc(ch, stdout);
+	    }
+        if (ch=='x')
+        {   printf('About to dump core\n');
+            fflush(stdout);
+            assert(0); // trigger core dump
+        }
+    }
+
     for (int i = 10; i >= 0; i--) {
         printf("Restarting in %d seconds...\n", i);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
+
     printf("Restarting now.\n");
     fflush(stdout);
     esp_restart();

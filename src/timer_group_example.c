@@ -81,13 +81,15 @@ void IRAM_ATTR timer_group0_isr(void *para)
         evt.type = TEST_WITH_RELOAD;
         timer_group_clr_intr_status_in_isr(TIMER_GROUP_0, TIMER_1);
     } else {
-        evt.type = -1; // not supported even type
+        evt.type = -1; // not supported event type
     }
 
     /* After the alarm has been triggered
       we need enable it again, so it is triggered the next time */
     timer_group_enable_alarm_in_isr(TIMER_GROUP_0, timer_idx);
 
+    //while(1); // should trigger watch dog interrupt
+    
     /* Now just send the event data back to the main program task */
     xQueueSendFromISR(timer_queue, &evt, NULL);
     timer_spinlock_give(TIMER_GROUP_0);
