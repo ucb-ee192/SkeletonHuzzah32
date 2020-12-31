@@ -15,6 +15,7 @@
 #define MAX_LOG_LENGTH 64
 
 void start_timer(void);  // prototype
+void start_control(void);  // prototype
 void log_init(uint32_t, uint32_t);
 
 void app_main()
@@ -37,6 +38,8 @@ void app_main()
 
     printf("About to start timer apps\n");
     start_timer();
+    printf("About to start control task\n");
+    start_control();
 
 /* Initialize logger for 32 entries with maximum lenght of one log 20 B */
     log_init(32, MAX_LOG_LENGTH); // buffer up to 32 lines of text

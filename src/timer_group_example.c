@@ -21,6 +21,7 @@ use single timer without reload
 #include "driver/periph_ctrl.h"
 #include "driver/timer.h"
 #include "esp_task_wdt.h"
+#include "skeleton.h"  /* parameters used by multiple files, defined in one place */
 
 #define TIMER_DIVIDER         16  //  Hardware timer clock divider on 80 MHz clock
 #define TIMER_SCALE           (TIMER_BASE_CLK / TIMER_DIVIDER)  // convert counter value to seconds
