@@ -168,12 +168,13 @@ void start_timer(void)
     // TaskFunction_t pvTaskCode, const char * const pcName,  configSTACK_DEPTH_TYPE usStackDepth,
     //  void *pvParameters, UBaseType_t uxPriority,  TaskHandle_t *pxCreatedTask (optional)
     xTaskCreate(timer_example_evt_task, "timer_evt_task", 2048, NULL, 2, NULL);
-    printf("Initialize TWDT\n");
+    //printf("Initialize TWDT\n");
     //Initialize or reinitialize TWDT
-    CHECK_ERROR_CODE(esp_task_wdt_init(TWDT_TIMEOUT_S, false), ESP_OK);
+    //CHECK_ERROR_CODE(esp_task_wdt_init(TWDT_TIMEOUT_S, false), ESP_OK);
     /* watch dog timer initialization already done by startup code */
-    esp_task_wdt_add(timer_example_evt_task);
-    esp_task_wdt_add(xTaskGetIdleTaskHandleForCPU(0));
-    esp_task_wdt_add(xTaskGetIdleTaskHandleForCPU(1));  // add idle tasks
+    //esp_task_wdt_add(timer_example_evt_task);
+    //esp_task_wdt_add(xTaskGetIdleTaskHandleForCPU(0));
+    //esp_task_wdt_add(xTaskGetIdleTaskHandleForCPU(1));  // add idle tasks
+    //CHECK_ERROR_CODE(esp_task_wdt_deinit(), ESP_OK); // try to turn off here
 }
 

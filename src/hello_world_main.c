@@ -12,7 +12,10 @@
 #include "esp_system.h"
 #include "esp_spi_flash.h"
 
+#define MAX_LOG_LENGTH 64
+
 void start_timer(void);  // prototype
+void log_init(uint32_t, uint32_t);
 
 void app_main()
 {   double z=3.14159;
@@ -34,6 +37,11 @@ void app_main()
 
     printf("About to start timer apps\n");
     start_timer();
+
+/* Initialize logger for 32 entries with maximum lenght of one log 20 B */
+    log_init(32, MAX_LOG_LENGTH); // buffer up to 32 lines of text
+    /* welcome message */
+    printf("EE192 Spring 2021 30 Dec 2020 v0.0\n\r");
 
     printf("Echoing character input [x to dump core]:");
     
