@@ -12,7 +12,7 @@
 #include "esp_system.h"
 #include "esp_spi_flash.h"
 
-void app_timer(void);  // prototype
+void start_timer(void);  // prototype
 
 void app_main()
 {   double z=3.14159;
@@ -33,7 +33,7 @@ void app_main()
             (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
 
     printf("About to start timer apps\n");
-    app_timer();
+    start_timer();
 
     printf("Echoing character input [x to dump core]:");
     
@@ -45,7 +45,7 @@ void app_main()
 		    fputc(ch, stdout);
 	    }
         if (ch=='x')
-        {   printf('About to dump core\n');
+        {   printf("About to dump core\n");
             fflush(stdout);
             assert(0); // trigger core dump
         }
