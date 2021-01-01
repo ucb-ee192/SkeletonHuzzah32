@@ -18,12 +18,10 @@ void start_control(void);  // prototype
 void log_init(uint32_t, uint32_t);
 void print_tasks(void);
 void start_heartbeat(void);
+void start_user(void);
 
 void app_main()
-{   double z=3.14159;
-   
-    printf("Hello world! 12/28/20 v4\n");
-    printf("Floating point 3.14159=%10.3f\n", z);
+{   
     /* Print chip information */
     esp_chip_info_t chip_info;
     esp_chip_info(&chip_info);
@@ -38,7 +36,7 @@ void app_main()
             (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
 
 /* welcome message */
-    printf("EE192 Spring 2021 30 Dec 2020 v0.0\n\r");
+    printf("EE192 Spring 2021 31 Dec 2020 v0.0\n\r");
 
 /* Initialize logger for 32 entries with maximum length. Start first as needed for control logging */
     printf("About to start logging task\n");
@@ -50,35 +48,17 @@ void app_main()
     start_control();
     printf("About to start heartbeat task\n");
     start_heartbeat();
+    printf("About to start user task\n");
+    start_user();
+
     print_tasks(); // verify what tasks are running
 
     
     vTaskSuspend(NULL);  // suspend current task
     
-    printf("Echoing character input [x to dump core]:");
-    while(1) {
-		uint8_t ch;
-	    ch = fgetc(stdin);
-	    if (ch!=0xFF)
-	    {
-		    fputc(ch, stdout);
-	    }
-        vTaskDelay(1000 / portTICK_PERIOD_MS); // allow IDLE process to run, else get watchdog timer
-        if (ch=='x')
-        {   printf("About to dump core\n");
-            fflush(stdout);
-            assert(0); // trigger core dump
-        }
-    }
+    
 
-    for (int i = 10; i >= 0; i--) {
-        printf("Restarting in %d seconds...\n", i);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-
-    printf("Restarting now.\n");
-    fflush(stdout);
-    esp_restart();
+    
 }
 
 /* for debugging see what tasks are doing */
