@@ -152,9 +152,12 @@ static void timer_example_evt_task(void *arg)
         //    evt.timer_counter_value, task_counter_value);
 
         time_elapsed = task_counter_value - evt.timer_counter_value;
+        /* 
         printf("Current time: %8.3f s. Elapsed counts since alarm event: %llu and msec: %.6f ms\n",
              (double) task_counter_value / TIMER_SCALE, time_elapsed, 1000.0*(double) time_elapsed / TIMER_SCALE); // long long unsigned int
-        
+        */
+        printf("alarm time: %8.3fs\t",
+             (double) task_counter_value / TIMER_SCALE); // long long unsigned int
        
     }
 }

@@ -14,6 +14,7 @@
 /* prototypes */
 static void userTask(void *pvParameters);
 void start_user(void);
+extern void print_tasks(void);
 
 void start_user()
 {     // TaskFunction_t pvTaskCode, const char * const pcName,  configSTACK_DEPTH_TYPE usStackDepth,
@@ -34,13 +35,13 @@ static void userTask(void *pvParameters)
     printf("Check floating point 3.14159=%10.3f\n", z);
 
     printf("Echoing character input:");
-    printf("r for reset CPU   x for dump core\n");
+    printf("r for reset CPU   x for dump core \t t for tasks \n");
     while(1) 
     {   ch = fgetc(stdin);
 	    if (ch!=0xFF)
 	    {
 		    fputc(ch, stdout);
-	        vTaskDelay(1000 / portTICK_PERIOD_MS); // allow IDLE process to run, else get watchdog timer
+	        vTaskDelay(100/ portTICK_PERIOD_MS); // allow IDLE process to run, else get watchdog timer
             switch(ch){
                 case 'x':
                     printf("About to dump core\n");
@@ -57,7 +58,11 @@ static void userTask(void *pvParameters)
                     fflush(stdout);
                     esp_restart();
                     break;
+                case 't':
+                    print_tasks();
+                    break;
                 default:
+                    printf("r for reset CPU   x for dump core \t t for tasks \n");
                     break;
             }
         }   
