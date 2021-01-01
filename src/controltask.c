@@ -16,8 +16,7 @@ extern uint32_t ulIdleCycleCount;
  * Definitions
  ******************************************************************************/
 
-//#define MAX_LOG_LENGTH 20
-#define MAX_LOG_LENGTH sizeof("Task1 Message 1, ticks 655535, z=3.14159 \n\r     ")
+
 
 /* definitions for dynamic simulation OMEGAD is damped frequency */
 #define SIGMA (1.0/5)
@@ -35,7 +34,7 @@ void start_control(void);
 /* Logger API */
 extern void log_add(char *log);
 extern void log_task(void *pvParameters);
-
+extern void print_tasks(void);
     
 
 void start_control(void)
@@ -66,7 +65,7 @@ static void control_task(void *pvParameters)
     starttime = ((double) task_counter_value / TIMER_SCALE);
     tick_start = xTaskGetTickCount();
 
-    for (i = 0; i < 9; i++)
+    for (i = 0; i < 10; i++)
     {   tick_now = xTaskGetTickCount();
         timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &task_counter_value);
         runtime = ((double) task_counter_value / TIMER_SCALE) -starttime;
@@ -76,9 +75,10 @@ static void control_task(void *pvParameters)
         /* simulate a dynamic response */
         y=exp(-SIGMA*runtime)*cos(OMEGAD*runtime-PHI);
 
-     	sprintf(log, "control: tick %d  time %8.3f (ms) y=%8.3f\n\r",
+     	sprintf(log, "control: tick %d  time %8.3f (s) y=%8.3f\n\r",
         		(int) tick_now, runtime, y);
         log_add(log);
+       
 
         vTaskDelay(xDelay1000ms); // relative delay in ticks
  //     vTaskDelayUntil( &tick_start, xDelay1000ms );  // unblocks at absolute time- needed for periodic functions
@@ -92,6 +92,9 @@ static void control_task(void *pvParameters)
         (long) xTaskGetTickCount() );
     //		(long)ulIdleCycleCount);
         log_add(log);
-    //vTaskDelay(3*xDelay1000ms); // give time for all tasks to finish printing before suspending
+
+    vTaskDelay(1000 / portTICK_PERIOD_MS);     // give time for log to finish before suspending 
+    print_tasks();
+    
     vTaskSuspend(NULL);  // suspend current task
 }

@@ -11,12 +11,13 @@
 #include "freertos/task.h"
 #include "esp_system.h"
 #include "esp_spi_flash.h"
-
-#define MAX_LOG_LENGTH 64
+#include "skeleton.h"
 
 void start_timer(void);  // prototype
 void start_control(void);  // prototype
 void log_init(uint32_t, uint32_t);
+void print_tasks(void);
+void start_heartbeat(void);
 
 void app_main()
 {   double z=3.14159;
@@ -36,18 +37,25 @@ void app_main()
     printf("%dMB %s flash\n", spi_flash_get_chip_size() / (1024 * 1024),
             (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
 
+/* welcome message */
+    printf("EE192 Spring 2021 30 Dec 2020 v0.0\n\r");
+
+/* Initialize logger for 32 entries with maximum length. Start first as needed for control logging */
+    printf("About to start logging task\n");
+    log_init(32, MAX_LOG_LENGTH); // buffer up to 32 lines of text
+
     printf("About to start timer apps\n");
     start_timer();
     printf("About to start control task\n");
     start_control();
+    printf("About to start heartbeat task\n");
+    start_heartbeat();
+    print_tasks(); // verify what tasks are running
 
-/* Initialize logger for 32 entries with maximum lenght of one log 20 B */
-    log_init(32, MAX_LOG_LENGTH); // buffer up to 32 lines of text
-    /* welcome message */
-    printf("EE192 Spring 2021 30 Dec 2020 v0.0\n\r");
-
-    printf("Echoing character input [x to dump core]:");
     
+    vTaskSuspend(NULL);  // suspend current task
+    
+    printf("Echoing character input [x to dump core]:");
     while(1) {
 		uint8_t ch;
 	    ch = fgetc(stdin);
@@ -55,6 +63,7 @@ void app_main()
 	    {
 		    fputc(ch, stdout);
 	    }
+        vTaskDelay(1000 / portTICK_PERIOD_MS); // allow IDLE process to run, else get watchdog timer
         if (ch=='x')
         {   printf("About to dump core\n");
             fflush(stdout);
@@ -71,3 +80,28 @@ void app_main()
     fflush(stdout);
     esp_restart();
 }
+
+/* for debugging see what tasks are doing */
+void print_tasks()
+{   UBaseType_t num_tasks;
+    char *task_stats;
+
+    num_tasks =  uxTaskGetNumberOfTasks();
+    printf("# of tasks %d\n", (int) num_tasks);
+ /* can't put this buffer  on stack, causes overflow, use heap */
+    task_stats = (char *) malloc(num_tasks*64); // allow 64 char per task?
+    // Check if the memory has been successfully  allocated by malloc or not 
+    if (task_stats == NULL) { 
+        printf("Error in print_tasks: Memory not allocated.\n"); 
+        exit(0); 
+    } 
+    
+    vTaskGetRunTimeStats(task_stats);
+    printf("%s\n", task_stats);
+    printf("vTaskList:\n");
+    printf("Name          State   Priority  Stack   Task#\n");
+    vTaskList(task_stats);
+    printf("%s\n", task_stats);
+    free(task_stats);
+}
+

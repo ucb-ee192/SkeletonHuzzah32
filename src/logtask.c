@@ -12,12 +12,12 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
+#include "skeleton.h"
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
 
-#define MAX_LOG_LENGTH 64
 
 static xQueueHandle log_queue = NULL; 
 
@@ -26,7 +26,7 @@ static xQueueHandle log_queue = NULL;
 void log_add(char *log);
 void log_init(uint32_t queue_length, uint32_t max_log_length);
 static void log_task(void *pvParameters);
-
+void printString(char *);  // quick replacement for printf to save stack space
 
 /*******************************************************************************
  * Logger functions
@@ -34,7 +34,7 @@ static void log_task(void *pvParameters);
 void log_init(uint32_t queue_length, uint32_t max_log_length)
 {
     log_queue = xQueueCreate(queue_length, max_log_length);
-    if (xTaskCreate(log_task, "log_task", configMINIMAL_STACK_SIZE + 166, NULL, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
+    if (xTaskCreate(log_task, "log_task", configMINIMAL_STACK_SIZE + 1024, NULL, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
     {   printf("Task creation failed!. Reset needed.\r\n");
         while (1)
             ;
@@ -62,9 +62,27 @@ void log_add(char *log)
 static void log_task(void *pvParameters)
 {   uint32_t counter = 0;
     char log[MAX_LOG_LENGTH + 1];
+    char numstring[16]; // up to 16 digits
+    char *logstring ="Log ";
+
     while (1)
     {   xQueueReceive(log_queue, log, portMAX_DELAY);
-        printf("Log %d: %s", counter, log);
+    //    printf("Log %d: %s", counter, log); // avoid printf to save stack space
+
+        printString(logstring);
+        itoa(counter,numstring,10); // non standard but it is in <stdlib.h>
+        printString(numstring);
+        fputc(' ',stdout);
+        printString(log);
         counter++;
     }
+}
+
+void printString(char *string)
+{   int i=0;
+    while (string[i] != '\0') 
+        {
+            fputc(string[i],stdout); // print single character, avoid printf to save on stack space and speed up
+            i++;
+        }    
 }
