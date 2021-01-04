@@ -35,7 +35,11 @@ void start_control(void);
 extern void log_add(char *log);
 extern void log_task(void *pvParameters);
 extern void print_tasks(void);
-    
+
+/* PWM API */
+extern void ledc_example_init();
+extern void set_ledc_pwm(uint32_t*);
+extern void stop_ledc_pwm();
 
 void start_control(void)
 {
@@ -65,6 +69,10 @@ static void control_task(void *pvParameters)
     starttime = ((double) task_counter_value / TIMER_SCALE);
     tick_start = xTaskGetTickCount();
 
+    // Initialize pwm
+    uint32_t duty[2] = {2000, 2000};
+    ledc_example_init();
+
     for (i = 0; i < 10; i++)
     {   tick_now = xTaskGetTickCount();
         timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &task_counter_value);
@@ -78,12 +86,18 @@ static void control_task(void *pvParameters)
      	sprintf(log, "control: tick %d  time %8.3f (s) y=%8.3f\n\r",
         		(int) tick_now, runtime, y);
         log_add(log);
+
+        // Set duty cycle
+        set_ledc_pwm(duty);
        
 
         vTaskDelay(xDelay1000ms); // relative delay in ticks
  //     vTaskDelayUntil( &tick_start, xDelay1000ms );  // unblocks at absolute time- needed for periodic functions
         taskYIELD();
     }
+
+    // Stop PWM
+    stop_ledc_pwm();
     
     tick_end = xTaskGetTickCount();
     sprintf(log, "Control Task done. tick_start %d tick_end %d\n\r", (int) tick_start, (int) tick_end);
