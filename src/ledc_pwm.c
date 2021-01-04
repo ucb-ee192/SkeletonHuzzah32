@@ -78,33 +78,28 @@ void ledc_example_init()
         .timer_num          = LEDC_HS_TIMER,            // timer index
         .clk_cfg            = LEDC_AUTO_CLK,            // Auto select the source clock
     };
-    ledc_timer_config(&ledc_timer);
 
-    // if (ledc_timer_config(&ledc_timer) != ESP_OK)
-    // {
-    //     printf("PWM Timer failed to start. Need reset!\n");
-    //     while (1)
-    //     {
-    //         ;
-    //     }
-    // }
+    if (ledc_timer_config(&ledc_timer) != ESP_OK)
+    {
+        printf("PWM Timer failed to start. Need reset!\n");
+        while (1)
+        {
+            ;
+        }
+    }
 
     // Initialize the ledc controller with channel
-
-    ledc_channel_config(&ledc_channel[0]);
-    ledc_channel_config(&ledc_channel[1]);
-
-    // for ( int i = 0; i < LEDC_TEST_CH_NUM; i++ )
-    // {
-    //     if (ledc_channel_config(&ledc_channel[i]) != ESP_OK)
-    //     {
-    //         printf("PWM Channel failed to start. Need reset!\n");
-    //         while (1)
-    //         {
-    //             ;
-    //         }
-    //     }
-    // }
+    for ( int ch = 0 ; ch < LEDC_TEST_CH_NUM; ch++ )
+    {
+        if (ledc_channel_config(&ledc_channel[ch]) != ESP_OK)
+        {
+            printf("PWM Channel failed to start. Need reset!\n");
+            while (1)
+            {
+                ;
+            }
+        }
+    }
 }
 
 void set_ledc_pwm(uint32_t *duty)
