@@ -74,8 +74,8 @@ static void control_task(void *pvParameters)
         /* output steering angle and motor PWM */
         /* simulate a dynamic response */
         y=exp(-SIGMA*runtime)*cos(OMEGAD*runtime-PHI);
-
-     	sprintf(log, "control: tick %d  time %8.3f (s) y=%8.3f\n\r",
+// defensive programming, make sure string fits in "log"
+     	snprintf(log, sizeof(log), "control: tick %d  time %8.3f (s) y=%8.3f\n\r",
         		(int) tick_now, runtime, y);
         log_add(log);
        

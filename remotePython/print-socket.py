@@ -15,8 +15,9 @@ def report(str):
 if __name__ == "__main__":
  # set up receive socket
     # local_ip = '192.168.10.1'
-    local_ip = '127.0.0.1'
-    local_port = 4445
+    address = ('192.168.4.1', 5555)
+    local_ip = '192.168.4.1'
+    local_port = 5555
     try:
         socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # socket for sending cmd
         socket.bind((local_ip, local_port))
