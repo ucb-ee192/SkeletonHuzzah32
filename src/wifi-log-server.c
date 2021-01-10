@@ -14,7 +14,7 @@
 #include "driver/ledc.h"
 
 static const char *TAG = "example";  // for logging
-
+static int sock; // needs to be available  to be passed to wifi log
 //--------
 //  WiFi
 //--------
@@ -120,44 +120,52 @@ int start_socket_server() {
    return(sock);
 }
 
-bool print_server(int sock)
+static void wifi_task(void *pvParameters)
 {   uint32_t counter = 0;
     bool ok = true;
     char log[128+1];
     char numstring[16]; // up to 16 digits
     char *logstring ="Log ";
     TickType_t tick_now;
+    int sock = (int) pvParameters;
+    printf("wifi_task using socket %d\n", sock);
     while(1)
     { 
         tick_now = xTaskGetTickCount(); 
         sprintf(log, "Log  %d tick %d ",
-        		counter, (int) tick_now);
+        		counter, (int) tick_now);  // change this out to avoid printf which uses lots of stack
         counter++;
      
         int err = sendto(sock, log, strlen(log), 0, (struct sockaddr *)&source_addr, sizeof(source_addr));
         if (err < 0) {
             ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
-            return !ok;
+            while(1); // halt 
         }
         vTaskDelay(1000 / portTICK_PERIOD_MS);   
     }
 }
 
+void wifi_log_init() // to be added: queue
+// address of stack variable can not be passed to task, must be static
+{ if (xTaskCreate(wifi_task, "wifi_task", configMINIMAL_STACK_SIZE + 1024, &sock, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
+    {   printf("Wifi Task creation failed!. Reset needed.\r\n");
+        while (1)
+            ;
+    }
+}
 
 //--------
-//  Main
+//  startup for wifi
 //--------
 
-void app_main() 
-{ int sock;
-    nvs_flash_init();
+void wifi_start() 
+{   nvs_flash_init(); // presumably needed, perhaps for code stored in flash???
 
     printf("\n*** starting access point ***\n");
     wifi_start_access_point();
     printf("\n*** starting socket server ***");
     sock=start_socket_server();
-    printf("Starting print send to client");
-    print_server(sock);
-    printf("About to delete app_main() task");
-    vTaskDelete(NULL);
+    printf("Starting wifi task send to client");
+    wifi_log_init();
+  
 }

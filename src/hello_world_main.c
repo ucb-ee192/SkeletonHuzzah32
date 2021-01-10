@@ -19,6 +19,7 @@ void log_init(uint32_t, uint32_t);
 void print_tasks(void);
 void start_heartbeat(void);
 void start_user(void);
+void wifi_start(void);
 
 void app_main()
 {   
@@ -36,10 +37,11 @@ void app_main()
             (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
 
 /* welcome message */
-    printf("EE192 Spring 2021 31 Dec 2020 v0.0\n\r");
-
+    printf("EE192 Spring 2021 09 Jan 2021 v0.1\n\r");
+    printf("Starting Wifi Tasks\n");
+    wifi_start();
 /* Initialize logger for 32 entries with maximum length. Start first as needed for control logging */
-    printf("About to start logging task\n");
+    printf("About to start UART logging task\n");
     log_init(32, MAX_LOG_LENGTH); // buffer up to 32 lines of text
 
     printf("About to start timer apps\n");
