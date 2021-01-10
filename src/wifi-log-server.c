@@ -122,16 +122,13 @@ int start_socket_server() {
 
 static void wifi_task(void *pvParameters)
 {   uint32_t counter = 0;
-    bool ok = true;
     char log[128+1];
     char numstring[16]; // up to 16 digits
     char *logstring ="Log ";
     TickType_t tick_now;
-    int sock = (int) pvParameters;
-    printf("wifi_task using socket %d\n", sock);
+    printf("wifi_task using socket %d\n", sock);  // global static
     while(1)
-    { 
-        tick_now = xTaskGetTickCount(); 
+    {   tick_now = xTaskGetTickCount(); 
         sprintf(log, "Log  %d tick %d ",
         		counter, (int) tick_now);  // change this out to avoid printf which uses lots of stack
         counter++;
@@ -147,7 +144,7 @@ static void wifi_task(void *pvParameters)
 
 void wifi_log_init() // to be added: queue
 // address of stack variable can not be passed to task, must be static
-{ if (xTaskCreate(wifi_task, "wifi_task", configMINIMAL_STACK_SIZE + 1024, &sock, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
+{ if (xTaskCreate(wifi_task, "wifi_task", configMINIMAL_STACK_SIZE + 2048, &sock, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
     {   printf("Wifi Task creation failed!. Reset needed.\r\n");
         while (1)
             ;
@@ -162,10 +159,14 @@ void wifi_start()
 {   nvs_flash_init(); // presumably needed, perhaps for code stored in flash???
 
     printf("\n*** starting access point ***\n");
+    fflush(stdout); // so not delayed
     wifi_start_access_point();
-    printf("\n*** starting socket server ***");
+    printf("\n*** starting socket server ***\n");
+    fflush(stdout);
     sock=start_socket_server();
-    printf("Starting wifi task send to client");
+    printf("Using socket %d\n", sock);
+    printf("\n *** Starting wifi task send to client ***\n");
+    fflush(stdout);
     wifi_log_init();
   
 }

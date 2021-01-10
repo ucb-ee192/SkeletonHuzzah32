@@ -16,6 +16,7 @@
 void start_timer(void);  // prototype
 void start_control(void);  // prototype
 void log_init(uint32_t, uint32_t);
+void uart_log_start(void);
 void print_tasks(void);
 void start_heartbeat(void);
 void start_user(void);
@@ -38,12 +39,14 @@ void app_main()
 
 /* welcome message */
     printf("EE192 Spring 2021 09 Jan 2021 v0.1\n\r");
+    /* Initialize logger queue for 32 entries with maximum length. 
+    * Start first as needed for control logging */
+    log_init(32, MAX_LOG_LENGTH); 
     printf("Starting Wifi Tasks\n");
     wifi_start();
-/* Initialize logger for 32 entries with maximum length. Start first as needed for control logging */
-    printf("About to start UART logging task\n");
-    log_init(32, MAX_LOG_LENGTH); // buffer up to 32 lines of text
 
+    printf("About to start UART logging task\n");
+    uart_log_start(); // start UART log
     printf("About to start timer apps\n");
     start_timer();
     printf("About to start control task\n");

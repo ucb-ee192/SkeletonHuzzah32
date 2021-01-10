@@ -1,2 +1,2 @@
-idf_component_register(SRCS "hello_world_main.c" "timer_group_example.c" "uart-logtask.c" "controltask.c" "heartbeattask.c"
+idf_component_register(SRCS "uart-logtask.c" "hello_world_main.c" "timer_group_example.c" "controltask.c" "heartbeattask.c"
 "usertask.c" "ledc_pwm.c" "wifi-log-server.c"                  INCLUDE_DIRS "")
