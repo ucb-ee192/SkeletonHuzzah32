@@ -20,6 +20,7 @@ static int sock; // needs to be available  to be passed to wifi log
 //--------
 
 const int port = 5555;
+extern xQueueHandle log_queue = NULL; 
 
 esp_err_t wifi_event_handler(void *ctx, system_event_t *event) {
     return ESP_OK;
@@ -120,32 +121,48 @@ int start_socket_server() {
    return(sock);
 }
 
-static void wifi_task(void *pvParameters)
+#define LINELEN 128
+/* keep task fast by not using printf */
+static void wifi_log_task(void *pvParameters)
 {   uint32_t counter = 0;
-    char log[128+1];
+    char log[LINELEN+1];
+    char linebuffer[LINELEN+16+1];
     char numstring[16]; // up to 16 digits
     char *logstring ="Log ";
-    TickType_t tick_now;
     printf("wifi_task using socket %d\n", sock);  // global static
+    fflush(stdout);
     while(1)
-    {   tick_now = xTaskGetTickCount(); 
-        sprintf(log, "Log  %d tick %d ",
-        		counter, (int) tick_now);  // change this out to avoid printf which uses lots of stack
-        counter++;
-     
-        int err = sendto(sock, log, strlen(log), 0, (struct sockaddr *)&source_addr, sizeof(source_addr));
+    {  // char *strcat(char *dest, const char *src)
+      /* if(xQueueReceive(log_queue, log, portMAX_DELAY) != pdPASS)
+       { printf("error reading from log_queue\n");} */
+        *log="debugging message";
+        printf("# %d from queue %s\n", counter, log);
+      /*  strncat(linebuffer, logstring, 5);
+        printf("step 1 %s\n", linebuffer);
+        fflush(stdout)
+        itoa(counter,numstring,10); // non standard but it is in <stdlib.h>
+        strncat(linebuffer, numstring,10);
+        strncat(linebuffer,' ',1);
+        printf("step 2 %s\n", linebuffer);
+        */
+       
+        strncat(linebuffer,log,LINELEN-15);  // account for extra chars
+        printf("step 3 %s\n", linebuffer);  
+        strcpy(linebuffer,log);   
+        int err = sendto(sock, linebuffer, strlen(linebuffer), 0, (struct sockaddr *)&source_addr, sizeof(source_addr));
         if (err < 0) {
             ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
             while(1); // halt 
         }
-        vTaskDelay(1000 / portTICK_PERIOD_MS);   
+        counter++;
+        vTaskDelay(500 / portTICK_PERIOD_MS);   
     }
 }
 
-void wifi_log_init() // to be added: queue
+void wifi_log_start() // to be added: queue
 // address of stack variable can not be passed to task, must be static
-{ if (xTaskCreate(wifi_task, "wifi_task", configMINIMAL_STACK_SIZE + 2048, &sock, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
-    {   printf("Wifi Task creation failed!. Reset needed.\r\n");
+{ if (xTaskCreate(wifi_log_task, "wifi_log_task", configMINIMAL_STACK_SIZE + 2048, &sock, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
+    {   printf("Wifi Log Task creation failed!. Reset needed.\r\n");
         while (1)
             ;
     }
@@ -167,6 +184,6 @@ void wifi_start()
     printf("Using socket %d\n", sock);
     printf("\n *** Starting wifi task send to client ***\n");
     fflush(stdout);
-    wifi_log_init();
+    wifi_log_start();
   
 }
