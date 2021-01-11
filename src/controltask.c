@@ -75,8 +75,9 @@ static void control_task(void *pvParameters)
 
 // measure time log_add() takes (time between timer_get_counter_value)
     timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &task_counter_value);
-    snprintf(log, sizeof(log), "Starting control: at tick %d  starttime %8.6f (s)\n\r",
-        		(int) tick_start, starttime);
+ //   snprintf(log, sizeof(log), "Starting control: at tick %d  current task counter value %ld\n\r",
+ //       		(int) tick_start, (long) task_counter_value);
+    itoa((int)task_counter_value,log,10);
     log_add(log);
     timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &task_counter_value1);
     
