@@ -20,7 +20,7 @@ static int sock; // needs to be available  to be passed to wifi log
 //--------
 
 const int port = 5555;
-extern xQueueHandle log_queue = NULL; 
+extern xQueueHandle log_queue;  // this is set by log_init 
 
 esp_err_t wifi_event_handler(void *ctx, system_event_t *event) {
     return ESP_OK;
@@ -127,16 +127,12 @@ static void wifi_log_task(void *pvParameters)
 {   uint32_t counter = 0;
     char log[LINELEN+1];
     char linebuffer[LINELEN+16+1];
-    char numstring[16]; // up to 16 digits
-    char *logstring ="Log ";
     printf("wifi_task using socket %d\n", sock);  // global static
     fflush(stdout);
     while(1)
     {  // char *strcat(char *dest, const char *src)
-      /* if(xQueueReceive(log_queue, log, portMAX_DELAY) != pdPASS)
-       { printf("error reading from log_queue\n");} */
-        *log="debugging message";
-        printf("# %d from queue %s\n", counter, log);
+       if(xQueueReceive(log_queue, log, portMAX_DELAY) != pdPASS)
+       { printf("error reading from log_queue\n");} 
       /*  strncat(linebuffer, logstring, 5);
         printf("step 1 %s\n", linebuffer);
         fflush(stdout)
@@ -144,18 +140,21 @@ static void wifi_log_task(void *pvParameters)
         strncat(linebuffer, numstring,10);
         strncat(linebuffer,' ',1);
         printf("step 2 %s\n", linebuffer);
-        */
-       
+             
         strncat(linebuffer,log,LINELEN-15);  // account for extra chars
         printf("step 3 %s\n", linebuffer);  
         strcpy(linebuffer,log);   
+         */
+        // have not timed this printf- may be slow and use lots of stack, may be better to use atoi(), etc.
+        snprintf(linebuffer, sizeof(linebuffer),"Log %d: %s\n",counter,log);
+// cuation: sendto can block if sent too much data. May wantto use non blocking
         int err = sendto(sock, linebuffer, strlen(linebuffer), 0, (struct sockaddr *)&source_addr, sizeof(source_addr));
         if (err < 0) {
             ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
             while(1); // halt 
         }
         counter++;
-        vTaskDelay(500 / portTICK_PERIOD_MS);   
+        vTaskDelay(10 / portTICK_PERIOD_MS);   
     }
 }
 

@@ -45,7 +45,7 @@ void start_control(void)
 {
     // TaskFunction_t pvTaskCode, const char * const pcName,  configSTACK_DEPTH_TYPE usStackDepth,
     //  void *pvParameters, UBaseType_t uxPriority,  TaskHandle_t *pxCreatedTask (optional)
-    if(xTaskCreate(control_task, "control_task", 2048, NULL, tskIDLE_PRIORITY + 2, NULL) !=pdPASS)
+    if(xTaskCreate(control_task, "control_task", 2048, NULL, tskIDLE_PRIORITY + 5, NULL) !=pdPASS)
     {   printf("Control Task creation failed! reboot needed.\r\n");
         while (1); // hang indefinitely
     }
@@ -55,24 +55,37 @@ void start_control(void)
  * @brief write_task_1 function
  */
 static void control_task(void *pvParameters)
-{
-    char log[MAX_LOG_LENGTH + 1];
+{   char log[MAX_LOG_LENGTH + 1];
     TickType_t tick_start, tick_end, tick_now;
-    uint64_t task_counter_value;
-    double runtime, starttime;
-   
+    uint64_t task_counter_value, task_counter_value1;
+    double runtime, starttime, checktime;
     int i;
     const TickType_t xDelay1000ms = pdMS_TO_TICKS( 1000 );
     double y; // output
-/* do time in double for simplicity. May check to see if too slow */
-    timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &task_counter_value);
-    starttime = ((double) task_counter_value / TIMER_SCALE);
-    tick_start = xTaskGetTickCount();
 
     // Initialize pwm
     uint32_t duty[2] = {2000, 2000};
     ledc_example_init();
 
+/* do time in double for simplicity. May check to see if too slow */
+    timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &task_counter_value);
+    starttime = ((double) task_counter_value / TIMER_SCALE);
+    tick_start = xTaskGetTickCount();
+   
+
+// measure time log_add() takes (time between timer_get_counter_value)
+    timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &task_counter_value);
+    snprintf(log, sizeof(log), "Starting control: at tick %d  starttime %8.6f (s)\n\r",
+        		(int) tick_start, starttime);
+    log_add(log);
+    timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &task_counter_value1);
+    
+    runtime = ((double) task_counter_value / TIMER_SCALE);       // do floating point after timing     
+    checktime = ((double) task_counter_value1 / TIMER_SCALE);
+
+    snprintf(log, sizeof(log), "log_add() took %8.3f milliseconds (s)\n\r",
+        		1000*(checktime-runtime));
+    log_add(log);
     for (i = 0; i < 10; i++)
     {   tick_now = xTaskGetTickCount();
         timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &task_counter_value);

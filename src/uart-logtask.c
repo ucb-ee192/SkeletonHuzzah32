@@ -19,7 +19,7 @@
  ******************************************************************************/
 
 
-static xQueueHandle log_queue = NULL; 
+xQueueHandle log_queue = NULL;  // globally available
 
 
 /* Logger API */

@@ -13,6 +13,8 @@
 #include "esp_spi_flash.h"
 #include "skeleton.h"
 
+#define WIFILOG
+
 void start_timer(void);  // prototype
 void start_control(void);  // prototype
 void log_init(uint32_t, uint32_t);
@@ -42,11 +44,16 @@ void app_main()
     /* Initialize logger queue for 32 entries with maximum length. 
     * Start first as needed for control logging */
     log_init(32, MAX_LOG_LENGTH); 
+// use log_add(char *log) to send messages to either UART or WiFi.
+// log_add uses a queue so that debugging should not block real time control routines
+#ifdef WIFILOG
     printf("Starting Wifi Tasks\n");
     wifi_start();
-
+#endif
+#ifndef WIFILOG
     printf("About to start UART logging task\n");
     uart_log_start(); // start UART log
+#endif
     printf("About to start timer apps\n");
     start_timer();
     printf("About to start control task\n");
