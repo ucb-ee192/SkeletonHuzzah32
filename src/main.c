@@ -100,7 +100,7 @@ void print_tasks()
 
     num_tasks =  uxTaskGetNumberOfTasks();
     printf("# of tasks %d\n", (int) num_tasks);
- /* can't put this buffer  on stack, causes overflow, use heap */
+    /* can't put this buffer  on stack, causes overflow, use heap */
     task_stats = (char *) malloc(num_tasks*64); // allow 64 char per task?
     // Check if the memory has been successfully  allocated by malloc or not 
     if (task_stats == NULL)

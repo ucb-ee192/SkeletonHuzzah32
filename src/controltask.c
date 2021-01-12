@@ -93,7 +93,7 @@ static void control_task(void *pvParameters)
     
     runtime = ((double) task_counter_value / TIMER_SCALE);       // do floating point after timing     
     checktime = ((double) task_counter_value1 / TIMER_SCALE);
-
+    
     snprintf(log, sizeof(log), "log_add() took %8.3f milliseconds (s)\n\r",
         		1000*(checktime-runtime));
     
