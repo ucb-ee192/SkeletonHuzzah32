@@ -21,7 +21,9 @@ use single timer without reload
 #include "esp_task_wdt.h"
 #include "skeleton.h"
 
-// Define macros
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
 #define TIMER_DIVIDER         16  //  Hardware timer clock divider on 80 MHz clock
 #define TIMER_SCALE           (TIMER_BASE_CLK / TIMER_DIVIDER)  // convert counter value to seconds
 /* if timer interval is longer than CONFIG_ESP_TASK_WDT_TIMEOUT_S, will get a wathcdog timeout */
@@ -36,7 +38,6 @@ use single timer without reload
             }                                                          \
 })
 
-// Relevant variables
 xQueueHandle timer_queue;
 
 // A sample structure to pass events from timer interrupt handler to the main program
@@ -46,6 +47,14 @@ typedef struct {
     int timer_idx;
     uint64_t timer_counter_value;
 } timer_event_t;
+
+/*******************************************************************************
+ * Prototypes
+ ******************************************************************************/
+
+/*******************************************************************************
+ * Functions
+ ******************************************************************************/
 
 // Timer group0 ISR handler
 void IRAM_ATTR timer_group0_isr(void *para)
@@ -86,13 +95,6 @@ void IRAM_ATTR timer_group0_isr(void *para)
 }
 
 // Initialize selected timer of the timer group 0
-/*
- * Initialize selected timer of the timer group 0
- *
- * timer_idx - the timer number to initialize
- * auto_reload - should the timer auto reload on alarm?
- * timer_interval_sec - the interval of alarm to set
- */
 static void example_tg0_timer_init(int timer_idx,
                                    bool auto_reload, double timer_interval_sec)
 {    /* Select and initialize basic parameters of the timer */
@@ -118,42 +120,30 @@ static void example_tg0_timer_init(int timer_idx,
     timer_start(TIMER_GROUP_0, timer_idx);
 }
 
-/*
- * The main task of this example program
- */
+// Task to run timer example
 static void timer_example_evt_task(void *arg)
 {   timer_event_t evt;
     uint64_t task_counter_value, time_elapsed;
     const TickType_t xDelay = 50 / portTICK_PERIOD_MS;
- //   UBaseType_t num_messages;
     while (1) {   
         
         while(uxQueueMessagesWaiting(timer_queue) < (UBaseType_t)1)
-        { taskYIELD(); // may need another task for this to do anything
+        {
+            taskYIELD(); // may need another task for this to do anything
             // add idle so watch dog not triggered 
-         vTaskDelay( xDelay );  /* Block for 50ms. */
-         esp_task_wdt_reset(); // keep watchdog from triggering due to this task
+            vTaskDelay( xDelay );  /* Block for 50ms. */
+            esp_task_wdt_reset(); // keep watchdog from triggering due to this task
         }
 
-        xQueueReceive(timer_queue, &evt, portMAX_DELAY); // assume only 1 reader for this queue
+        xQueueReceive(timer_queue, &evt, portMAX_DELAY);
         timer_get_counter_value(evt.timer_group, evt.timer_idx, &task_counter_value);
-        //printf("EVENT TIME %llu ------ TASK TIME %llu\n", 
-        //    evt.timer_counter_value, task_counter_value);
-
-        time_elapsed = task_counter_value - evt.timer_counter_value;
-        /* 
-        printf("Current time: %8.3f s. Elapsed counts since alarm event: %llu and msec: %.6f ms\n",
-             (double) task_counter_value / TIMER_SCALE, time_elapsed, 1000.0*(double) time_elapsed / TIMER_SCALE); // long long unsigned int
-        */
         printf("alarm time: %8.3fs\t",
-             (double) task_counter_value / TIMER_SCALE); // long long unsigned int
+             (double) task_counter_value / TIMER_SCALE);
        
     }
 }
 
-/*
- * In this example, we will test hardware timer0 and timer1 of timer group0.
- */
+// Start the timer task
 void start_timer(void)
 {
     timer_queue = xQueueCreate(10, sizeof(timer_event_t));
@@ -161,13 +151,6 @@ void start_timer(void)
     // TaskFunction_t pvTaskCode, const char * const pcName,  configSTACK_DEPTH_TYPE usStackDepth,
     //  void *pvParameters, UBaseType_t uxPriority,  TaskHandle_t *pxCreatedTask (optional)
     xTaskCreate(timer_example_evt_task, "timer_evt_task", 2048, NULL, 2, NULL);
-    //printf("Initialize TWDT\n");
-    //Initialize or reinitialize TWDT
-    //CHECK_ERROR_CODE(esp_task_wdt_init(TWDT_TIMEOUT_S, false), ESP_OK);
-    /* watch dog timer initialization already done by startup code */
-    //esp_task_wdt_add(timer_example_evt_task);
-    //esp_task_wdt_add(xTaskGetIdleTaskHandleForCPU(0));
-    //esp_task_wdt_add(xTaskGetIdleTaskHandleForCPU(1));  // add idle tasks
-    //CHECK_ERROR_CODE(esp_task_wdt_deinit(), ESP_OK); // try to turn off here
+
 }
 

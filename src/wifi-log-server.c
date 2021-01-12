@@ -23,14 +23,24 @@ downloaded from https://gist.github.com/narfdotpl/329c201534903396e5851b38bf715c
 #include <string.h>
 #include "driver/ledc.h"
 
-// Define macros
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
 #define LINELEN 128                     // Line length for logging message
 
-// Relevant variables
 static const char *TAG = "example";     // for logging
 static int sock;                        // needs to be available  to be passed to wifi log
 const int port = 5555;
 extern xQueueHandle log_queue;          // this is set by log_init 
+
+/*******************************************************************************
+ * Prototypes
+ ******************************************************************************/
+
+
+/*******************************************************************************
+ * Functions
+ ******************************************************************************/
 
 // Returns success of wifi event
 esp_err_t wifi_event_handler(void *ctx, system_event_t *event) {
@@ -163,13 +173,14 @@ static void wifi_log_task(void *pvParameters)
 }
 
 // Begin logging over wifi connection
-void wifi_log_start() // to be added: queue
-// address of stack variable can not be passed to task, must be static
-{ if (xTaskCreate(wifi_log_task, "wifi_log_task", configMINIMAL_STACK_SIZE + 2048, &sock, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
+void wifi_log_start()
+{
+    // TaskFunction_t pvTaskCode, const char * const pcName,  configSTACK_DEPTH_TYPE usStackDepth,
+    //  void *pvParameters, UBaseType_t uxPriority,  TaskHandle_t *pxCreatedTask (optional)
+    if (xTaskCreate(wifi_log_task, "wifi_log_task", configMINIMAL_STACK_SIZE + 2048, &sock, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
     {   
         printf("Wifi Log Task creation failed!. Reset needed.\r\n");
-        while (1)
-            ;
+        while (1);
     }
 }
 

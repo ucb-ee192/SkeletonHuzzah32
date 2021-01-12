@@ -1,7 +1,14 @@
-/* user tasks. Things which block can go here, as this task is low priority 
-* and not part of task watchdog.
-* Blocking operations such as getchar can not be in main() as they will cause watchdog timeout 
+/* User Tasks Script
+EE 192, Spring 2021, R. Fearing
+
+ENTER DESCRIPTION
+
+User tasks. Things which block can go here, as this task is low priority and not part of task watchdog.
+Blocking operations such as getchar can not be in main() as they will cause watchdog timeout 
+
 */
+
+// Includes
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -9,13 +16,23 @@
 #include "driver/gpio.h"
 #include "sdkconfig.h"
 
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
 #define BLINK_GPIO 13 // IO13
 
-/* prototypes */
+/*******************************************************************************
+ * Prototypes
+ ******************************************************************************/
 static void userTask(void *pvParameters);
 void start_user(void);
 extern void print_tasks(void);
 
+/*******************************************************************************
+ * Functions
+ ******************************************************************************/
+
+// Start user task
 void start_user()
 {     // TaskFunction_t pvTaskCode, const char * const pcName,  configSTACK_DEPTH_TYPE usStackDepth,
     //  void *pvParameters, UBaseType_t uxPriority,  TaskHandle_t *pxCreatedTask (optional)
@@ -26,10 +43,10 @@ void start_user()
     
 }
 
-/* just have a task execute continually blinking LED. This should keep task watch dog timer restting */
-
+// User task for interface and debugging
 static void userTask(void *pvParameters)
-{   double z=3.14159;
+{   
+    double z=3.14159;
     uint8_t ch;
     printf("User Task started\n");  
     printf("Check floating point 3.14159=%10.3f\n", z);
@@ -37,7 +54,8 @@ static void userTask(void *pvParameters)
     printf("Echoing character input:");
     printf("r for reset CPU   x for dump core \t t for tasks \n");
     while(1) 
-    {   ch = fgetc(stdin);
+    {   
+        ch = fgetc(stdin);
 	    if (ch!=0xFF)
 	    {
 		    fputc(ch, stdout);

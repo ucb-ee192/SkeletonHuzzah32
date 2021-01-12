@@ -13,10 +13,14 @@ ENTER DESCRIPTION
 #include "esp_spi_flash.h"
 #include "skeleton.h"
 
-// Define macros
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
 #define WIFILOG
 
-// Function prototypes
+/*******************************************************************************
+ * Prototypes
+ ******************************************************************************/
 void start_timer(void);
 void start_control(void);
 void log_init(uint32_t, uint32_t);
@@ -25,6 +29,10 @@ void print_tasks(void);
 void start_heartbeat(void);
 void start_user(void);
 void wifi_start(void);
+
+/*******************************************************************************
+ * Functions
+ ******************************************************************************/
 
 // Main application
 void app_main()
@@ -49,6 +57,8 @@ void app_main()
     log_init(32, MAX_LOG_LENGTH); 
     // use log_add(char *log) to send messages to either UART or WiFi.
     // log_add uses a queue so that debugging should not block real time control routines
+
+    // Initialize logging process (Wifi or UART)
 #ifdef WIFILOG
     printf("Starting Wifi Tasks\n");
     wifi_start();
@@ -57,12 +67,20 @@ void app_main()
     printf("About to start UART logging task\n");
     uart_log_start(); // start UART log
 #endif
+
+    // Begin example timer functions
     printf("About to start timer apps\n");
     start_timer();
+
+    // Begin control functions
     printf("About to start control task\n");
     start_control();
+
+    // Begin heartbeat
     printf("About to start heartbeat task\n");
     start_heartbeat();
+
+    // Begin user interface
     printf("About to start user task\n");
     start_user();
 

@@ -13,14 +13,24 @@ ENTER DESCRIPTION
 #include "freertos/queue.h"
 #include "skeleton.h"
 
-// Relevant variables
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
 xQueueHandle log_queue = NULL;  // globally available
 
-// Function prototypes
+
+/*******************************************************************************
+ * Prototypes
+ ******************************************************************************/
 void log_add(char *log);
 void log_init(uint32_t queue_length, uint32_t max_log_length);
 static void uart_log_task(void *pvParameters);
 void printString(char *);  // quick replacement for printf to save stack space
+
+
+/*******************************************************************************
+ * Functions
+ ******************************************************************************/
 
 // Initialize logging over UART
 void log_init(uint32_t queue_length, uint32_t max_log_length)
@@ -32,11 +42,12 @@ void log_init(uint32_t queue_length, uint32_t max_log_length)
 // Start the task associated to uart logging
 void uart_log_start()
 { 
+    // TaskFunction_t pvTaskCode, const char * const pcName,  configSTACK_DEPTH_TYPE usStackDepth,
+    //  void *pvParameters, UBaseType_t uxPriority,  TaskHandle_t *pxCreatedTask (optional)
     if (xTaskCreate(uart_log_task, "uart_log_task", configMINIMAL_STACK_SIZE + 1024, NULL, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
     {   
         printf("UART Log Task creation failed!. Reset needed.\r\n");
-        while (1)
-            ;
+        while (1);
     }
 }
 

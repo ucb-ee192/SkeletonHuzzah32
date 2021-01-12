@@ -1,11 +1,11 @@
-/* LEDC (LED Controller) fade example
+/* LEDC PWM Script
+EE 192, Spring 2021, R. Fearing
 
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
+ENTER DESCRIPTION
 
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
 */
+
+// Includes
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -13,28 +13,9 @@
 #include "esp_err.h"
 #include "skeleton.h"
 
-/*
- * About this example
- *
- * 1. Start with initializing LEDC module:
- *    a. Set the timer of LEDC first, this determines the frequency
- *       and resolution of PWM.
- *    b. Then set the LEDC channel you want to use,
- *       and bind with one of the timers.
- *
- * 2. You need first to install a default fade function,
- *    then you can use fade APIs.
- *
- * 3. You can also set a target duty directly without fading.
- *
- * 4. This example uses GPIO18/19/4/5 as LEDC output,
- *    and it will change the duty repeatedly.
- *
- * 5. GPIO18/19 are from high speed channel group.
- *    GPIO4/5 are from low speed channel group.
- *
- */
-
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
 #define LEDC_HS_TIMER          LEDC_TIMER_0
 #define LEDC_HS_MODE           LEDC_HIGH_SPEED_MODE
 #define LEDC_HS_CH0_GPIO       (18)
@@ -45,9 +26,6 @@
 #define LEDC_TEST_CH_NUM       (2)
 #define LEDC_FREQUENCY         (5000)
 
-void ledc_example_init();
-void set_ledc_pwm(uint32_t *duty);
-void stop_ledc_pwm();
 
 static ledc_channel_config_t ledc_channel[LEDC_TEST_CH_NUM] = {
         {
@@ -68,6 +46,18 @@ static ledc_channel_config_t ledc_channel[LEDC_TEST_CH_NUM] = {
         }
     };
 
+/*******************************************************************************
+ * Prototypes
+ ******************************************************************************/
+void ledc_example_init();
+void set_ledc_pwm(uint32_t *duty);
+void stop_ledc_pwm();
+
+/*******************************************************************************
+ * Functions
+ ******************************************************************************/
+
+// Initialize ledc controller with defined config
 void ledc_example_init()
 {
     // Initialize the ledc controller with a timer
@@ -102,6 +92,7 @@ void ledc_example_init()
     }
 }
 
+// Function for setting ledc pwm duty cycles
 void set_ledc_pwm(uint32_t *duty)
 {
     for ( int ch = 0 ; ch < LEDC_TEST_CH_NUM; ch++ )
@@ -111,6 +102,7 @@ void set_ledc_pwm(uint32_t *duty)
     }
 }
 
+// Function for ceasing all pwm functions
 void stop_ledc_pwm()
 {
     for ( int ch = 0 ; ch < LEDC_TEST_CH_NUM; ch++ )
