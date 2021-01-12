@@ -1,18 +1,16 @@
-/* Timer group-hardware timer example
+/* Timer Group Example Script
+EE 192, Spring 2021, R. Fearing
 
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
+ENTER DESCRIPTION
 
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
-
-/* modified from 
+modified from 
 .platformio/packages/framework-espidf/examples/peripherals/timer_group/main/timer_group_example_main.c
 by R. Fearing 12/20
 use single timer without reload
+
 */
 
+// Includes
 #include <stdio.h>
 #include "esp_types.h"
 #include "freertos/FreeRTOS.h"
@@ -21,8 +19,9 @@ use single timer without reload
 #include "driver/periph_ctrl.h"
 #include "driver/timer.h"
 #include "esp_task_wdt.h"
-#include "skeleton.h"  /* parameters used by multiple files, defined in one place */
+#include "skeleton.h"
 
+// Define macros
 #define TIMER_DIVIDER         16  //  Hardware timer clock divider on 80 MHz clock
 #define TIMER_SCALE           (TIMER_BASE_CLK / TIMER_DIVIDER)  // convert counter value to seconds
 /* if timer interval is longer than CONFIG_ESP_TASK_WDT_TIMEOUT_S, will get a wathcdog timeout */
@@ -37,29 +36,18 @@ use single timer without reload
             }                                                          \
 })
 
+// Relevant variables
+xQueueHandle timer_queue;
 
-/*
- * A sample structure to pass events
- * from the timer interrupt handler to the main program.
- */
+// A sample structure to pass events from timer interrupt handler to the main program
 typedef struct {
-    int type;  // the type of timer's event
+    int type;                       // the type of timer's event
     int timer_group;
     int timer_idx;
     uint64_t timer_counter_value;
 } timer_event_t;
 
-xQueueHandle timer_queue;
-
-
-/*
- * Timer group0 ISR handler
- *
- * Note:
- * We don't call the timer API here because they are not declared with IRAM_ATTR.
- * If we're okay with the timer irq not being serviced while SPI flash cache is disabled,
- * we can allocate this interrupt without the ESP_INTR_FLAG_IRAM flag and use the normal API.
- */
+// Timer group0 ISR handler
 void IRAM_ATTR timer_group0_isr(void *para)
 {
     timer_spinlock_take(TIMER_GROUP_0);
@@ -97,6 +85,7 @@ void IRAM_ATTR timer_group0_isr(void *para)
     xQueueSendFromISR(timer_queue, &evt, NULL);  
 }
 
+// Initialize selected timer of the timer group 0
 /*
  * Initialize selected timer of the timer group 0
  *
