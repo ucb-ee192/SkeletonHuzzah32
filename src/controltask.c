@@ -62,6 +62,21 @@ void start_control(void)
     }
 }
 
+void ESC_startup(void)
+{
+    uint32_t duty[2] = {0, 4095};
+    // Send pulse
+    set_ledc_pwm(duty);
+    vTaskDelay(pdMS_TO_TICKS(60));
+    
+    duty[1] = 0;
+    set_ledc_pwm(duty);
+    vTaskDelay(pdMS_TO_TICKS(200));
+
+    duty[1] = 200;
+    set_ledc_pwm(duty);
+}
+
 // Control task that handles vehicle dynamics and control
 static void control_task(void *pvParameters)
 {   
@@ -74,7 +89,7 @@ static void control_task(void *pvParameters)
     double y; // output
 
     // Initialize pwm
-    uint32_t duty[2] = {2000, 2000};
+    uint32_t duty[2] = {0, 200};
     ledc_example_init();
 
     // Use timer
@@ -100,8 +115,12 @@ static void control_task(void *pvParameters)
     // Add to log queue
     log_add(log);
 
+    // Begin ESC startup callibration routine
+    ESC_startup();
+
     for (i = 0; i < 10; i++)
-    {   tick_now = xTaskGetTickCount();
+    {   
+        tick_now = xTaskGetTickCount();
         timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &task_counter_value);
         runtime = ((double) task_counter_value / TIMER_SCALE) -starttime;
 
@@ -122,6 +141,7 @@ static void control_task(void *pvParameters)
         log_add(log);
 
         // Set duty cycle of PWMs
+        duty[1] += 10;
         set_ledc_pwm(duty);
 
         vTaskDelay(xDelay1000ms); // relative delay in ticks

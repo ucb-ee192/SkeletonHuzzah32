@@ -24,7 +24,7 @@ ENTER DESCRIPTION
 #define LEDC_HS_CH1_CHANNEL    LEDC_CHANNEL_1
 
 #define LEDC_TEST_CH_NUM       (2)
-#define LEDC_FREQUENCY         (5000)
+#define LEDC_FREQUENCY         (50)
 
 
 static ledc_channel_config_t ledc_channel[LEDC_TEST_CH_NUM] = {
@@ -62,7 +62,7 @@ void ledc_example_init()
 {
     // Initialize the ledc controller with a timer
     ledc_timer_config_t ledc_timer = {
-        .duty_resolution    = LEDC_TIMER_13_BIT,        // resolution of PWM duty
+        .duty_resolution    = LEDC_TIMER_12_BIT,        // resolution of PWM duty
         .freq_hz            = LEDC_FREQUENCY,           // frequency of PWM signal
         .speed_mode         = LEDC_HS_MODE,             // timer mode
         .timer_num          = LEDC_HS_TIMER,            // timer index
