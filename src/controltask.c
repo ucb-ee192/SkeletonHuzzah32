@@ -62,19 +62,19 @@ void start_control(void)
     }
 }
 
-void ESC_startup(void)
+static void ESC_startup(uint32_t *duty)
 {
-    uint32_t duty[2] = {0, 4095};
     // Send pulse
     set_ledc_pwm(duty);
-    vTaskDelay(pdMS_TO_TICKS(60));
-    
-    duty[1] = 0;
-    set_ledc_pwm(duty);
-    vTaskDelay(pdMS_TO_TICKS(200));
 
-    duty[1] = 200;
+    vTaskDelay(pdMS_TO_TICKS(3000));
+    
+    duty[1] = 250;
     set_ledc_pwm(duty);
+    vTaskDelay(pdMS_TO_TICKS(3000));
+
+    // duty[1] = 200;
+    // set_ledc_pwm(duty);
 }
 
 // Control task that handles vehicle dynamics and control
@@ -89,8 +89,11 @@ static void control_task(void *pvParameters)
     double y; // output
 
     // Initialize pwm
-    uint32_t duty[2] = {0, 200};
+    uint32_t duty[2] = {0, 0};
     ledc_example_init();
+
+    // Test throttle trajectory
+    uint32_t throttle_trajectory[10] = {260, 270, 280, 290, 280, 270, 260, 250, 260, 250};
 
     // Use timer
     timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &task_counter_value);
@@ -116,7 +119,9 @@ static void control_task(void *pvParameters)
     log_add(log);
 
     // Begin ESC startup callibration routine
-    ESC_startup();
+    snprintf(log, sizeof(log), "Turn on ESC!\n\r");
+    log_add(log);
+    ESC_startup(duty);
 
     for (i = 0; i < 10; i++)
     {   
@@ -134,15 +139,20 @@ static void control_task(void *pvParameters)
 
         y=exp(-SIGMA*runtime)*cos(OMEGAD*runtime-PHI);
         // defensive programming, make sure string fits in "log"
-     	snprintf(log, sizeof(log), "control: tick %d  time %8.3f (s) y=%8.3f\n\r",
-        		(int) tick_now, runtime, y);
-        
-        // Add to log queue
-        log_add(log);
+     	// snprintf(log, sizeof(log), "control: tick %d  time %8.3f (s) y=%8.3f\n\r",
+        // 		(int) tick_now, runtime, y);
 
         // Set duty cycle of PWMs
-        duty[1] += 10;
+        duty[1] = throttle_trajectory[i];
+        // duty[1] += 10;
+        // duty[1] = 220;
         set_ledc_pwm(duty);
+
+        snprintf(log, sizeof(log), "control: tick %d time %8.3f (s) steer=%d throttle=%d\n\r",
+                (int) tick_now, runtime, duty[0], duty[1]);
+
+        // Add to log queue
+        log_add(log);
 
         vTaskDelay(xDelay1000ms); // relative delay in ticks
 
