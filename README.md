@@ -37,8 +37,12 @@ In order to write, debug, compile, and flash the Huzzah32, we will be making use
 
 The first step to getting set up is to get your software installed. We will be using Microsoft's Visual Studio Code as the integrated development environment (IDE) for our embedded system code. You can find [installation links and instructions for MacOS, Windows, and Linux here](https://code.visualstudio.com/).
 
-Once you've installed Code, we can move to the next step of installing the PlatformIO plugin. First, you will need to navigate to the VS Code Package Manager, also found under the Extensions tab on the left of the VS Code window. Once there, search for "platform ide" in the search bar. The first result should be **PlatformIO IDE 2.2.1***. Install this extension. Reload the VS Code window when prompted.
+Once you've installed Code, we can move to the next step of installing the PlatformIO plugin. First, you will need to navigate to the VS Code Package Manager, also found under the Extensions tab on the left of the VS Code window. Once there, search for "platform ide" in the search bar. The first result should be **PlatformIO IDE 2.2.1**. Install this extension. Reload the VS Code window when prompted.
 
 At this point, the PlatformIO plugin has been installed, but we still need to download the proper framework to compile and flash our specific microcontroller. To do this, we will start a new project. In the PlatformIO home screen, select "New Project". Enter a name into the project name field. **Make sure that your project name has no spaces. If you do not use a default location, your file path should not have spaces either.** For board, select from the dropdown menu "Adafruit ESP32 Feather". Finally, select "Espressif IoT Development Framework" for Framework. Select Finish and wait for the framework to be installed.
 
-After the installation finishes, you should now see your project with a default file structure on the left of your VS Code window.
+After the installation finishes, you should now see your project with the default file structure on the left of your VS Code window. From this point, your software environment should be configured properly! Let's test it out with a simple Hello World example. You can go ahead and close the example project you created by going to File->"Close Folder". We won't be using it moving forward.
+
+Navigate to the PlatformIO home page by selecting the PlatformIO tab on the left (looks like an alien head) and selecting Open. From here, press the "Project Examples" option under "Quick Access". This will bring up a new window where you can select from a range of examples from the available frameworks you have installed. Select **"espidf-hello-world"** and then import.
+
+Once this finishes, the example project will open, and you should see the file structure of the project on the left.
