@@ -47,6 +47,50 @@ Navigate to the PlatformIO home page by selecting the PlatformIO tab on the left
 
 Once this finishes, the example project will open, and you should see the file structure of the project on the left. Let's take a look at the source file for this example by navigating to **src->hello_world_main.c**. If you've coded in C before, the syntax should be familiar to you. The main function of this file "app_main()" will print out some ESP32 chip information to stdio and then restart after 10 seconds.
 
+```c
+/* Hello World Example
+
+   This example code is in the Public Domain (or CC0 licensed, at your option.)
+
+   Unless required by applicable law or agreed to in writing, this
+   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+   CONDITIONS OF ANY KIND, either express or implied.
+*/
+#include <stdio.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_system.h"
+#include "esp_spi_flash.h"
+
+
+void app_main()
+{
+    printf("Hello world!\n");
+
+    /* Print chip information */
+    esp_chip_info_t chip_info;
+    esp_chip_info(&chip_info);
+    printf("This is ESP32 chip with %d CPU cores, WiFi%s%s, ",
+            chip_info.cores,
+            (chip_info.features & CHIP_FEATURE_BT) ? "/BT" : "",
+            (chip_info.features & CHIP_FEATURE_BLE) ? "/BLE" : "");
+
+    printf("silicon revision %d, ", chip_info.revision);
+
+    printf("%dMB %s flash\n", spi_flash_get_chip_size() / (1024 * 1024),
+            (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
+
+    for (int i = 10; i >= 0; i--) {
+        printf("Restarting in %d seconds...\n", i);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+    printf("Restarting now.\n");
+    fflush(stdout);
+    esp_restart();
+}
+
+```
+
 Before building this project, we need to make a few edits to get it to work with our hardware. Navigate to the **platformio.ini** file in your project. This file is the configuration file for PlatformIO and tells the plugin what hardware, framework, connection, etc. to prepare. Edit the platformio.ini file to remove the other boards and to add our own. Afterwards, the platformio.ini contents should look like the following:
 
 ```c
