@@ -31,7 +31,7 @@ In addition to the base RC car hardware (and included components such as the NiM
 INSERT A FEW COMMENTS ABOUT CHASSIS ADAPTER DESIGN AND ACCESS TO THE DESIGN FILES!!!
 
 ## Software Requirements
-In order to write, debug, compile, and flash the Huzzah32, we will be making use of the [PlatformIO plugin](https://platformio.org/platformio-ide) for [Visual Studio Code](https://code.visualstudio.com/). Depending on your choice of operating system, you may also want to download a terminal emulator (such as [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/)) for streamlining the process of establishing serial communication with your microcontroller. While the source code used on our embedded system will be written in C, we will be using Python for several communication-based tasks as well.
+In order to write, debug, compile, and flash the Huzzah32, we will be making use of the [PlatformIO plugin](https://platformio.org/platformio-ide) for [Visual Studio Code](https://code.visualstudio.com/). Depending on your choice of operating system, you may also want to download a terminal emulator (such as [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/)) for streamlining the process of establishing serial communication with your microcontroller. While the source code used on our embedded system will be written in C, we will be using Python for several communication-based tasks as well. Please make sure you have a recent Python3 distribution installed.
 
 # Getting Started!
 
@@ -45,4 +45,24 @@ After the installation finishes, you should now see your project with the defaul
 
 Navigate to the PlatformIO home page by selecting the PlatformIO tab on the left (looks like an alien head) and selecting Open. From here, press the "Project Examples" option under "Quick Access". This will bring up a new window where you can select from a range of examples from the available frameworks you have installed. Select **"espidf-hello-world"** and then import.
 
-Once this finishes, the example project will open, and you should see the file structure of the project on the left.
+Once this finishes, the example project will open, and you should see the file structure of the project on the left. Let's take a look at the source file for this example by navigating to **src->hello_world_main.c**. If you've coded in C before, the syntax should be familiar to you. The main function of this file "app_main()" will print out some ESP32 chip information to stdio and then restart after 10 seconds.
+
+Before building this project, we need to make a few edits to get it to work with our hardware. Navigate to the **platformio.ini** file in your project. This file is the configuration file for PlatformIO and tells the plugin what hardware, framework, connection, etc. to prepare. Edit the platformio.ini file to remove the other boards and to add our own. Afterwards, the platformio.ini contents should look like the following:
+
+```c
+[env:featheresp32]
+platform = espressif32
+framework = espidf
+board = featheresp32
+monitor_speed = 115200
+```
+
+Don't forget to use the correct baud rate (115200) later on when connecting to your serial port!
+
+Now, we are ready to build and flash! At the bottom of your VS Code window, you should see a thin blue toolbar with a bunch of icons. Select the checkmark to build. A terminal window will popup and you should see some diagnostic text being printed. This will take a few minutes usually. Once that finishes, use a micro USB card to connect your Huzzah32 to your computer, and select the right arrow on the toolbar to begin flashing your microcontroller.
+
+Once the uploading process has finished, you should see **[SUCCESS]** in the terminal. Congratulations, you've flashed your first program! Let's see if it works. Open your preferred terminal utility (we will be using PuTTY), and attempt to make a serial connection at 115200 to the port assigned to your microcontroller (COM3 in our case). Depending on your operating system, the name of your serial port will be different.
+
+When we establish a connection, you should see that the Huzzah32 begins printing what we expected!
+
+Now that we have successfully built and flashed our first program using PlatformIO and the ESP-IDF framework, we can move onto the main skeleton code for controlling your vehicle.
