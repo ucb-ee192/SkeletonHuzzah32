@@ -103,7 +103,7 @@ monitor_speed = 115200
 
 Don't forget to use the correct baud rate (115200) later on when connecting to your serial port!
 
-Now, we are ready to build and flash! At the bottom of your VS Code window, you should see a thin blue toolbar with a bunch of icons. Select the checkmark to build. A terminal window will popup and you should see some diagnostic text being printed. This will take a few minutes usually. Once that finishes, use a micro USB card to connect your Huzzah32 to your computer, and select the right arrow on the toolbar to begin flashing your microcontroller.
+Now, we are ready to build and flash! At the bottom of your VS Code window, you should see a thin blue toolbar with a bunch of icons. Select the checkmark to build. A terminal window will popup and you should see some diagnostic text being printed. This will take a few minutes usually. Once that finishes, use a micro USB cable to connect your Huzzah32 to your computer, and select the right arrow on the toolbar to begin flashing your microcontroller.
 
 Once the uploading process has finished, you should see **[SUCCESS]** in the terminal. Congratulations, you've flashed your first program! Let's see if it works. Open your preferred terminal utility (we will be using PuTTY), and attempt to make a serial connection at 115200 to the port assigned to your microcontroller (COM3 in our case). Depending on your operating system, the name of your serial port will be different.
 
