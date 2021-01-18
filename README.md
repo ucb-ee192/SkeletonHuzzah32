@@ -1,5 +1,9 @@
 # SkeletonHuzzah32
-Basic skeleton code for EE192 Spring 2021
+
+### For advanced details see the wiki page:
+https://github.com/ucb-ee192/SkeletonHuzzah32/wiki
+
+## Basic skeleton code for EE192 Spring 2021
 
 Using Espressif IoT Development Framework, for PlatformIO plugin for Visual Studio Code.
 https://docs.platformio.org/en/latest/integration/ide/vscode.html#quick-start
