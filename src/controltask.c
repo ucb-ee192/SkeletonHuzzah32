@@ -24,11 +24,6 @@ ENTER DESCRIPTION
 #define PHI 0.5
 #define OMEGAD 1.0   
 
-/* globals */
-extern volatile uint32_t systime; //systime updated very 100 us = 4 days ==> NEED OVERFLOW protection
-extern float sqrt_array[1000]; // to hold results
-extern uint32_t ulIdleCycleCount;
-
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
@@ -73,7 +68,7 @@ static void control_task(void *pvParameters)
     char log[MAX_LOG_LENGTH + 1];
     TickType_t tick_start, tick_end, tick_now;
     uint64_t task_counter_value, task_counter_value1;
-    double runtime, starttime, checktime;
+    double runtime, starttime;
     int i;
     const TickType_t xDelay1000ms = pdMS_TO_TICKS( 1000 );
     double y; // output
@@ -86,28 +81,15 @@ static void control_task(void *pvParameters)
     timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &task_counter_value);
     starttime = ((double) task_counter_value / TIMER_SCALE);
     tick_start = xTaskGetTickCount();
-
-    // Testing different print timings
-    // measure time log_add() takes (time between timer_get_counter_value)
     timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &task_counter_value);
     snprintf(log, sizeof(log), "Starting control: at tick %d  current task counter value %ld\n\r",
             (int) tick_start, (long) task_counter_value);
-    itoa((int)task_counter_value,log,10);
-    log_add(log);
-    timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &task_counter_value1);
-    
     runtime = ((double) task_counter_value / TIMER_SCALE);       // do floating point after timing     
-    checktime = ((double) task_counter_value1 / TIMER_SCALE);
-    
-    snprintf(log, sizeof(log), "log_add() took %8.3f milliseconds (s)\n\r",
-        		1000*(checktime-runtime));
     
     // Add to log queue
     log_add(log);
 
     // Begin ESC startup callibration routine
-    snprintf(log, sizeof(log), "Turn on ESC!\n\r");
-    log_add(log);
     ESC_startup(duty);
 
     for (i = 0; i < 10; i++)
