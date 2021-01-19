@@ -64,17 +64,7 @@ void start_control(void)
 
 static void ESC_startup(uint32_t *duty)
 {
-    // Send pulse
-    set_ledc_pwm(duty);
-
-    vTaskDelay(pdMS_TO_TICKS(3000));
-    
-    duty[1] = 250;
-    set_ledc_pwm(duty);
-    vTaskDelay(pdMS_TO_TICKS(3000));
-
-    // duty[1] = 200;
-    // set_ledc_pwm(duty);
+    // Perform startup
 }
 
 // Control task that handles vehicle dynamics and control
@@ -92,12 +82,6 @@ static void control_task(void *pvParameters)
     uint32_t duty[2] = {0, 0};
     ledc_example_init();
 
-    // Test throttle trajectory
-    uint32_t throttle_trajectory[10] = {260, 270, 280, 290, 280, 270, 260, 250, 280, 250};
-
-    // Test steering trajectory
-    uint32_t steering_trajectory[10] = {260, 270, 280, 290, 280, 270, 260, 250, 260, 250};
-
     // Use timer
     timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &task_counter_value);
     starttime = ((double) task_counter_value / TIMER_SCALE);
@@ -106,8 +90,8 @@ static void control_task(void *pvParameters)
     // Testing different print timings
     // measure time log_add() takes (time between timer_get_counter_value)
     timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &task_counter_value);
-    //   snprintf(log, sizeof(log), "Starting control: at tick %d  current task counter value %ld\n\r",
-    //       		(int) tick_start, (long) task_counter_value);
+    snprintf(log, sizeof(log), "Starting control: at tick %d  current task counter value %ld\n\r",
+            (int) tick_start, (long) task_counter_value);
     itoa((int)task_counter_value,log,10);
     log_add(log);
     timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &task_counter_value1);
@@ -142,21 +126,14 @@ static void control_task(void *pvParameters)
 
         y=exp(-SIGMA*runtime)*cos(OMEGAD*runtime-PHI);
         // defensive programming, make sure string fits in "log"
-     	// snprintf(log, sizeof(log), "control: tick %d  time %8.3f (s) y=%8.3f\n\r",
-        // 		(int) tick_now, runtime, y);
-
-        // Set duty cycle of PWMs
-        duty[0] = steering_trajectory[i];
-        duty[1] = throttle_trajectory[i];
-        // duty[1] += 10;
-        // duty[1] = 220;
-        set_ledc_pwm(duty);
-
-        snprintf(log, sizeof(log), "control: tick %d time %8.3f (s) steer=%d throttle=%d\n\r",
-                (int) tick_now, runtime, duty[0], duty[1]);
+     	snprintf(log, sizeof(log), "control: tick %d  time %8.3f (s) y=%8.3f\n\r",
+        		(int) tick_now, runtime, y);
 
         // Add to log queue
         log_add(log);
+
+        // Set duty cycle of PWMs
+        set_ledc_pwm(duty);
 
         vTaskDelay(xDelay1000ms); // relative delay in ticks
 
