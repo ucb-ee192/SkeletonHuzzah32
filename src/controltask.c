@@ -93,7 +93,10 @@ static void control_task(void *pvParameters)
     ledc_example_init();
 
     // Test throttle trajectory
-    uint32_t throttle_trajectory[10] = {260, 270, 280, 290, 280, 270, 260, 250, 260, 250};
+    uint32_t throttle_trajectory[10] = {260, 270, 280, 290, 280, 270, 260, 250, 280, 250};
+
+    // Test steering trajectory
+    uint32_t steering_trajectory[10] = {260, 270, 280, 290, 280, 270, 260, 250, 260, 250};
 
     // Use timer
     timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &task_counter_value);
@@ -143,6 +146,7 @@ static void control_task(void *pvParameters)
         // 		(int) tick_now, runtime, y);
 
         // Set duty cycle of PWMs
+        duty[0] = steering_trajectory[i];
         duty[1] = throttle_trajectory[i];
         // duty[1] += 10;
         // duty[1] = 220;
