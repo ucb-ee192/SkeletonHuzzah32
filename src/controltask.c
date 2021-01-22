@@ -121,7 +121,8 @@ static void control_task(void *pvParameters)
 
         taskYIELD();
     }
-
+    *((int *) 0) = 0;  // cause panic by writing to nonexistent address
+    // cause core dump
     // Stop PWM
     stop_ledc_pwm();
     
