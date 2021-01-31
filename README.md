@@ -1,9 +1,20 @@
-# SkeletonHuzzah32
+# Branch UDPCommands
 
 ### For advanced details see the wiki page:
 https://github.com/ucb-ee192/SkeletonHuzzah32/wiki
 
-## Basic skeleton code for EE192 Spring 2021
+## Updated skeleton code for EE192 Spring 2021 January 30, 2021
+
+This branch has significant changes compared to the basic Skeleton code on the main branch.
+
+* Remote python client is now log-input-client-udp.python
+* Python client gets keyboard input of form COMMAND VALUE, where COMMAND is a string upto 8 char long, and VALUE is an integer (32 bits)
+* A single entry queue cmd_queue holds the command and value received in a UDP packet. Command processing needs to be addedto 
+added to udp_cmd() in usertask.c for extra commands. 
+* a rudimentary error handler is added in usertask.c called car_error_handle(). This would be a good place
+to shutdown the car (e.g. set PWM for zero speed), and perhaps alert the user (e.g. by blinking LED) that an errorhas occured.
+
+-----------------------------------------
 
 Using Espressif IoT Development Framework, for PlatformIO plugin for Visual Studio Code.
 https://docs.platformio.org/en/latest/integration/ide/vscode.html#quick-start
