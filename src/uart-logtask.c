@@ -17,7 +17,8 @@ ENTER DESCRIPTION
  * Definitions
  ******************************************************************************/
 xQueueHandle log_queue = NULL;  // globally available
-
+xQueueHandle cmd_queue = NULL;  // globally available
+extern struct cmd_struct_def cmd_struct;
 
 /*******************************************************************************
  * Prototypes
@@ -32,11 +33,13 @@ void printString(char *);  // quick replacement for printf to save stack space
  * Functions
  ******************************************************************************/
 
-// Initialize logging over UART
+// Initialize logging queue (used for both UART and WiFi) and recv queue for commands from WiFi
 void log_init(uint32_t queue_length, uint32_t max_log_length)
-{   
-    log_queue = xQueueCreate(queue_length, max_log_length);
+{   log_queue = xQueueCreate(queue_length, max_log_length);
     vQueueAddToRegistry(log_queue, "PrintQueue");
+    cmd_queue = xQueueCreate(1, sizeof(cmd_struct)); // only use most recent command, queue length=1
+    // if using longer command queue, need to change wifi-log-server to not use xQueueOverwrite()
+    vQueueAddToRegistry(cmd_queue, "CommandQueue");
 }
 
 // Start the task associated to uart logging

@@ -8,11 +8,11 @@ https://github.com/nkolban/esp32-snippets/blob/bf8649ba5df3b154866a814014fd97c02
 https://github.com/nkolban/esp32-snippets/blob/master/wifi/fragments/access-point.c
 downloaded from https://gist.github.com/narfdotpl/329c201534903396e5851b38bf715ce9
 
-*/
+*/ 
 
 // Includes
 #include <esp_event.h>
-#include <esp_event_loop.h>
+//#include <esp_event_loop.h>
 #include <esp_log.h>
 #include <esp_system.h>
 #include <esp_wifi.h>
@@ -22,6 +22,7 @@ downloaded from https://gist.github.com/narfdotpl/329c201534903396e5851b38bf715c
 #include <stdio.h>
 #include <string.h>
 #include "driver/ledc.h"
+#include "skeleton.h"
 
 /*******************************************************************************
  * Definitions
@@ -31,11 +32,18 @@ downloaded from https://gist.github.com/narfdotpl/329c201534903396e5851b38bf715c
 static const char *TAG = "example";     // for logging
 static int sock;                        // needs to be available  to be passed to wifi log
 const int port = 5555;
-extern xQueueHandle log_queue;          // this is set by log_init 
+extern xQueueHandle log_queue;          // this is set by log_init in uart-logtask.c
+extern xQueueHandle cmd_queue;          // this is set by log_init 
+struct cmd_struct_def cmd_struct;       // define structure to receive commands
+
+// Capture address from each distinct address
+struct sockaddr_in source_addr; // Large enough for both IPv4 or IPv6
+socklen_t socklen = sizeof(source_addr);
 
 /*******************************************************************************
  * Prototypes
- ******************************************************************************/
+ ************** ****************************************************************/
+void connect_client(int);
 
 
 /*******************************************************************************
@@ -48,9 +56,8 @@ esp_err_t wifi_event_handler(void *ctx, system_event_t *event) {
 }
 
 // Starts a wifi access point
-void wifi_start_access_point() {
-
-    // Define wifi configuration to be referenced in wifi setup routine
+void wifi_start_access_point() 
+{  // Define wifi configuration to be referenced in wifi setup routine
     wifi_config_t wifi_config = {
         .ap = {
             .ssid="Huzzah32",
@@ -75,45 +82,29 @@ void wifi_start_access_point() {
     esp_wifi_start();
 }
 
-// Capture address from each distinct address
-struct sockaddr_in source_addr; // Large enough for both IPv4 or IPv6
-        socklen_t socklen = sizeof(source_addr);
 
-bool connect_client(int sock) {
-    bool ok = true;                                 // Return status
-    char *text_message ="Connected to Huzzah32!";   // Message upon connecting successfully
-    int message[1];
+
+void connect_client(int sock) 
+{   char *text_message ="Connected to Huzzah32!";   // Message upon connecting successfully
     int size_read;
     
     // Attempt to receive from connecting address
-    printf("Waiting to receive\n");
-    size_read = recvfrom(sock, message, 1 * 4, 0, (struct sockaddr *)&source_addr, &socklen);
-    if (size_read <= 0) {
-        return !ok;
-    }
-
-    // Send message on connect
-    printf("%d bytes from %s \n",
+    printf("Waiting to receive first message\n");
+    size_read = recvfrom(sock, &cmd_struct, sizeof(cmd_struct), 0, (struct sockaddr *)&source_addr, &socklen);
+    if (size_read <= 0) 
+    {  car_error_handle(ERR_UDP); }
+   
+    printf("UDP connection established.\n %d bytes from %s \n",
         size_read, inet_ntoa(source_addr.sin_addr.s_addr));
+    printf("commmand: %s  value = %d \n", cmd_struct.cmd, cmd_struct.value);
+    xQueueOverwrite(cmd_queue, &cmd_struct);  // put most recent command on queue, over writing any previous cmd
+ 
+  // Send message on connect
     int err = sendto(sock, text_message, strlen(text_message), 0, (struct sockaddr *)&source_addr, sizeof(source_addr));
     if (err < 0)
-    {
-        ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
-        return !ok;
+    {   ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
+        car_error_handle(ERR_UDP);
     }
-
-    // Message received from connecting address
-    int pulse1 = message[0];
-
-    // Print out message
-    bool debug = true;
-    if (debug)
-    {
-        printf("%d: %d\n", 0, pulse1);
-        fflush(stdout);
-    }
-
-    return ok;
 }
 
 // Start the socket server hosted on the ESP32 that will receive and reply to connecting machine
@@ -125,71 +116,79 @@ int start_socket_server() {
         .sin_addr.s_addr = htonl(INADDR_ANY),
         .sin_port = htons(port)
     };
-    
     bind(sock, (struct sockaddr *)&server_address, sizeof(server_address));
     connect_client(sock);  // Use reply address to send log data to
+       
     return(sock);
 }
 
 // Wifi log task that will run in the background and send info to connected machine
 static void wifi_log_task(void *pvParameters)
-{   
-    uint32_t counter = 0;
+{   uint32_t scount = 0; // count sent log messages
+    uint32_t rcount = 0; // count received messages
     char log[LINELEN+1];
     char linebuffer[LINELEN+16+1];
+    struct pollfd poll_set[1]; //initialize file descriptor for socket, here only need 1
+    UBaseType_t logready;  // >=1 for log entires in queue                       
+    int poll_val, size_read;
+   
     printf("wifi_task using socket %d\n", sock);  // global static
     fflush(stdout);
+   
+    // initialize structure for polling socket
+    poll_set[0].fd = sock;
+    poll_set[0].events = POLLIN | POLLRDNORM | POLLRDBAND;
+    poll_set[0].revents = 0;
     
     while(1)
-    {
-        if(xQueueReceive(log_queue, log, portMAX_DELAY) != pdPASS)
-        { printf("error reading from log_queue\n"); }
-        
-        /*  strncat(linebuffer, logstring, 5);
-        printf("step 1 %s\n", linebuffer);
-        fflush(stdout)
-        itoa(counter,numstring,10); // non standard but it is in <stdlib.h>
-        strncat(linebuffer, numstring,10);
-        strncat(linebuffer,' ',1);
-        printf("step 2 %s\n", linebuffer);
-             
-        strncat(linebuffer,log,LINELEN-15);  // account for extra chars
-        printf("step 3 %s\n", linebuffer);  
-        strcpy(linebuffer,log);   
-         */
-        // have not timed this printf- may be slow and use lots of stack, may be better to use atoi(), etc.
-        snprintf(linebuffer, sizeof(linebuffer),"Log %d: %s\n",counter,log);
-
-        // CAUTION: sendto can block if sent too much data. May wantto use non blocking
-        int err = sendto(sock, linebuffer, strlen(linebuffer), 0, (struct sockaddr *)&source_addr, sizeof(source_addr));
-        if (err < 0)
-        {
-            ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
-            while(1); // halt 
+    {   logready =  uxQueueMessagesWaiting(log_queue);
+        if (logready >= 1)  // send item from log queue 
+        {   if(xQueueReceive(log_queue, log, portMAX_DELAY) != pdPASS)
+            { printf("error reading from log_queue\n"); }
+            // have not timed this printf- may be slow and use lots of stack, may be better to use atoi(), etc.
+            snprintf(linebuffer, sizeof(linebuffer),"Log %d: %s",scount,log);
+            // CAUTION: sendto can block if sent too much data. May want to use non blocking
+            int err = sendto(sock, linebuffer, strlen(linebuffer), 0, (struct sockaddr *)&source_addr, sizeof(source_addr));
+            if (err < 0)
+            {   ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
+                while(1); // halt 
+            }
+            scount++;
         }
-        counter++;
+        /* now check for input from socket */
+        // int poll(struct pollfd fds[], nfds_t nfds, int timeout); -- timeout in milliseconds, 0 return immediately
+        poll_val= poll(poll_set, (nfds_t)1, 0);  // returns <0 for error, 0 for timed out, =1 for data
+        if (poll_val < 0)
+        {  printf("poll error, errno=%d\n", errno); }
+        else if (poll_val == 1) // 1 file descriptor ready to read
+        {   // printf("poll %d fd ready. revents = %x\n", poll_val, poll_set[0].revents);
+            //size_read = recvfrom(sock, linebuffer, sizeof(linebuffer), 0, (struct sockaddr *)&source_addr, &socklen);
+            size_read = recvfrom(sock, &cmd_struct, sizeof(cmd_struct), 0, (struct sockaddr *)&source_addr, &socklen);
+            if (size_read <= 0) 
+            {   printf("socket read error\n");     }
+            printf("%d bytes from %s ", size_read, inet_ntoa(source_addr.sin_addr.s_addr)); 
+            printf("commmand: %s  value = %d \n", cmd_struct.cmd, cmd_struct.value);
+            xQueueOverwrite(cmd_queue, &cmd_struct);  // put most recent command on queue, over writing any previous cmd
+            rcount++;  // received message counter
+        }
         vTaskDelay(10 / portTICK_PERIOD_MS);   
     }
 }
 
 // Begin logging over wifi connection
 void wifi_log_start()
-{
-    // TaskFunction_t pvTaskCode, const char * const pcName,  configSTACK_DEPTH_TYPE usStackDepth,
+{    // TaskFunction_t pvTaskCode, const char * const pcName,  configSTACK_DEPTH_TYPE usStackDepth,
     //  void *pvParameters, UBaseType_t uxPriority,  TaskHandle_t *pxCreatedTask (optional)
     if (xTaskCreate(wifi_log_task, "wifi_log_task", configMINIMAL_STACK_SIZE + 2048, &sock, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
-    {   
-        printf("Wifi Log Task creation failed!. Reset needed.\r\n");
+    {   printf("Wifi Log Task creation failed!. Reset needed.\r\n");
         while (1);
     }
 }
 
 // Organize startup tasks for initiating wifi logging
 void wifi_start() 
-{   
-    // Needed for code stored in flash
+{   // Needed for code stored in flash
     nvs_flash_init();
-
     printf("\n*** starting access point ***\n");
     fflush(stdout);                                     // Flush stdout so wifi startup not delayed
     wifi_start_access_point();                          // Create access point on ESP32
