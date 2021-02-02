@@ -25,6 +25,7 @@ Blocking operations such as getchar can not be in main() as they will cause watc
  * Definitions
  ******************************************************************************/
 extern xQueueHandle cmd_queue;          // this is set by log_init 
+extern xQueueHandle ctl_queue;
 
 /*******************************************************************************
  * Prototypes
@@ -35,6 +36,7 @@ extern void print_tasks(void);
 extern void log_add(char *);
 void print_help(void);
 void get_time(void);
+void do_fade(int);
 void uart_cmd(uint8_t);
 void udp_cmd(char *, int);
 
@@ -87,6 +89,10 @@ void udp_cmd(char command[], int value)
     printf("\n In udp_command. command:%s value %d\n", ucommand, value);
     if (strcmp(ucommand,"TIME") == 0) 
         get_time();
+
+    if (strcmp(ucommand, "FADE") == 0) {
+        do_fade(value);
+    }
 }
 
 
@@ -135,6 +141,13 @@ void get_time()
     timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &task_counter_value);
     snprintf(log, sizeof(log),"Current time is %8.3f sec \n", (double) task_counter_value / TIMER_SCALE);
     log_add(log);
+}
+
+void do_fade(int freq)
+{
+    struct ctl_struct_def ctl_struct;
+    ctl_struct.param_1 = freq;
+    xQueueOverwrite(ctl_queue, &ctl_struct);
 }
  
 

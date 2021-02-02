@@ -18,7 +18,7 @@ ENTER DESCRIPTION
  ******************************************************************************/
 #define LEDC_HS_TIMER          LEDC_TIMER_0
 #define LEDC_HS_MODE           LEDC_HIGH_SPEED_MODE
-#define LEDC_HS_CH0_GPIO       (18)
+#define LEDC_HS_CH0_GPIO       (13)
 #define LEDC_HS_CH0_CHANNEL    LEDC_CHANNEL_0
 #define LEDC_HS_CH1_GPIO       (19)
 #define LEDC_HS_CH1_CHANNEL    LEDC_CHANNEL_1
@@ -52,6 +52,7 @@ static ledc_channel_config_t ledc_channel[LEDC_TEST_CH_NUM] = {
 void ledc_example_init();
 void set_ledc_pwm(uint32_t *duty);
 void stop_ledc_pwm();
+void perform_ledc_fade(int time);
 
 /*******************************************************************************
  * Functions
@@ -100,6 +101,23 @@ void set_ledc_pwm(uint32_t *duty)
         ledc_set_duty(ledc_channel[ch].speed_mode, ledc_channel[ch].channel, duty[ch]);
         ledc_update_duty(ledc_channel[ch].speed_mode, ledc_channel[ch].channel);
     }
+}
+
+void perform_ledc_fade(int time)
+{
+    ledc_set_fade_with_time(ledc_channel[0].speed_mode,
+            ledc_channel[0].channel, 4000, time);
+    ledc_fade_start(ledc_channel[0].speed_mode,
+            ledc_channel[0].channel, LEDC_FADE_NO_WAIT);
+    
+    vTaskDelay(time / portTICK_PERIOD_MS);
+
+    ledc_set_fade_with_time(ledc_channel[0].speed_mode,
+            ledc_channel[0].channel, 0, time);
+    ledc_fade_start(ledc_channel[0].speed_mode,
+            ledc_channel[0].channel, LEDC_FADE_NO_WAIT);
+    
+    vTaskDelay(time / portTICK_PERIOD_MS);
 }
 
 // Function for ceasing all pwm functions

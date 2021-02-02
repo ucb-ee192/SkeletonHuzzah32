@@ -18,7 +18,9 @@ ENTER DESCRIPTION
  ******************************************************************************/
 xQueueHandle log_queue = NULL;  // globally available
 xQueueHandle cmd_queue = NULL;  // globally available
+xQueueHandle ctl_queue = NULL;  // globally available
 extern struct cmd_struct_def cmd_struct;
+extern struct ctl_struct_def ctl_struct;
 
 /*******************************************************************************
  * Prototypes
@@ -40,6 +42,8 @@ void log_init(uint32_t queue_length, uint32_t max_log_length)
     cmd_queue = xQueueCreate(1, sizeof(cmd_struct)); // only use most recent command, queue length=1
     // if using longer command queue, need to change wifi-log-server to not use xQueueOverwrite()
     vQueueAddToRegistry(cmd_queue, "CommandQueue");
+    ctl_queue = xQueueCreate(1, sizeof(ctl_struct));
+    vQueueAddToRegistry(ctl_queue, "ControlQueue");
 }
 
 // Start the task associated to uart logging

@@ -21,3 +21,9 @@ struct cmd_struct_def {
     char cmd[8];
     int value;
 };  
+
+// structure for control settings to be sent to control task
+struct ctl_struct_def {
+    int param_1;
+    int param_2;
+}; 
